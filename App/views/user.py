@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
+from flask_login import login_required, current_user
 
 from.index import index_views
 
@@ -7,9 +8,19 @@ from App.controllers import (
     create_user,
     get_all_users,
     get_all_users_json,
-    jwt_required
+    get_student_applications,
+    get_available_positions,
+    apply_to_position,
+    get_profile_completeness,
+    get_company_positions,
+    create_internship_position,
+    update_application_status,
+    get_all_applications
+
+
 )
 
+#userViews------------------------userViews-------------------------userViews--------------------------------------userViews
 user_views = Blueprint('user_views', __name__, template_folder='../templates')
 
 @user_views.route('/users', methods=['GET'])
@@ -38,3 +49,107 @@ def create_user_endpoint():
 @user_views.route('/static/users', methods=['GET'])
 def static_user_page():
   return send_from_directory('static', 'static-user.html')
+
+
+
+#studentViews------------------------studentViews-------------------------studentViews--------------------------------------studentViews
+student_views = Blueprint('student_views', __name__, template_folder='../templates')
+
+@student_views.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.user_type != 'student':
+        flash('Access denied', 'error')
+        return redirect(url_for('auth_views.login_page'))
+    
+    applications = get_student_applications(current_user.id)
+    completeness = get_profile_completeness(current_user.id)
+    return render_template('student/dashboard.html', 
+                         applications=applications,
+                         completeness=completeness)
+
+@student_views.route('/positions')
+@login_required
+def view_positions():
+    positions = get_available_positions(current_user.id)
+    return render_template('student/positions.html', positions=positions)
+
+@student_views.route('/apply/<int:position_id>', methods=['POST'])
+@login_required
+def apply_position(position_id):
+    cover_letter = request.form.get('cover_letter')
+    if apply_to_position(current_user.id, position_id, cover_letter):
+        flash('Application submitted!', 'success')
+    else:
+        flash('Application failed', 'error')
+    return redirect(url_for('student_views.dashboard'))
+
+
+
+#companyViews------------------------companyViews-------------------------companyViews--------------------------------------companyViews
+company_views = Blueprint('company_views', __name__, template_folder='../templates')
+
+@company_views.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.user_type != 'company':
+        flash('Access denied', 'error')
+        return redirect(url_for('auth_views.login_page'))
+    
+    positions = get_company_positions(current_user.id)
+    return render_template('company/dashboard.html', positions=positions)
+
+
+@company_views.route('/positions/new', methods=['GET', 'POST'])
+@login_required
+def new_position():
+    if request.method == 'POST':
+        position_data = {
+            'title': request.form.get('title'),
+            'description': request.form.get('description'),
+            'requirements': request.form.get('requirements'),
+            'location': request.form.get('location'),
+            'salary': request.form.get('salary'),
+            'duration': request.form.get('duration'),
+            'deadline': request.form.get('deadline'),
+            'skills_required': request.form.get('skills_required')
+        }
+        if create_internship_position(current_user.id, **position_data):
+            flash('Position created!', 'success')
+            return redirect(url_for('company_views.dashboard'))
+        flash('Failed to create position', 'error')
+    return render_template('company/new_position.html')
+
+@company_views.route('/position/<int:position_id>/shortlist/<int:application_id>')
+@login_required
+def shortlist_application(position_id, application_id):
+    if update_application_status(application_id, 'shortlisted'):
+        flash('Application shortlisted', 'success')
+    else:
+        flash('Operation failed', 'error')
+    return redirect(url_for('company_views.view_position', position_id=position_id))
+
+
+
+
+#staffViews------------------------staffViews-------------------------staffViews--------------------------------------staffViews
+staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
+
+@staff_views.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.user_type != 'staff':
+        flash('Access denied', 'error')
+        return redirect(url_for('auth_views.login_page'))
+    
+    applications = get_all_applications()
+    return render_template('staff/dashboard.html', applications=applications)
+
+@staff_views.route('/application/<int:application_id>/shortlist')
+@login_required
+def shortlist_app(application_id):
+    if shortlist_application(application_id):
+        flash('Application shortlisted', 'success')
+    else:
+        flash('Operation failed', 'error')
+    return redirect(url_for('staff_views.dashboard'))

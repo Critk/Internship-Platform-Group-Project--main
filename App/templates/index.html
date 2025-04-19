@@ -1,13 +1,42 @@
 {% extends "layout.html" %}
-{% block title %}Flask MVC App{% endblock %}
-{% block page %}Flask MVC App{% endblock %}
+{% block title %}My Application{% endblock %}
+{% block page %}My Application{% endblock %}
 
 {{ super() }}
 
 {% block content %}
-    <h1>Flask MVC</h1>
-    {% if is_authenticated %}
-        <p> Welcome {{current_user.username}} </p>
-    {% endif %}
-    <p>This is a boileplate flask application which follows the MVC pattern for structuring the project.</p>
+<div class="row">
+    <div class="col s12">
+        <h4>My Internship Applications</h4>
+        
+        {% if applications %}
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Position</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>Date Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in applications %}
+                <tr>
+                    <td>{{ app.position.title }}</td>
+                    <td>{{ app.position.company.name }}</td>
+                    <td>
+                        <span class="badge {% if app.status == 'shortlisted' %}blue{% elif app.status == 'rejected' %}red{% else %}grey{% endif %}">
+                            {{ app.status }}
+                        </span>
+                    </td>
+                    <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>You haven't applied to any positions yet.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

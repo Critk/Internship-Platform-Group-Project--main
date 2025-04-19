@@ -5,7 +5,8 @@ from flask_jwt_extended import jwt_required, current_user, unset_jwt_cookies, se
 from.index import index_views
 
 from App.controllers import (
-    login
+    login,
+    get_all_users  # Import the missing function
 )
 
 auth_views = Blueprint('auth_views', __name__, template_folder='../templates')
