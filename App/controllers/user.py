@@ -2,60 +2,14 @@ from App.models import User, Student, Company, Staff, InternshipPosition, Applic
 from App.database import db
 from werkzeug.security import generate_password_hash
 
+
+# User Functions---------------------User Functions------------------User Functions------------------User Functions
 def create_user(username, password, email, name, user_type, **kwargs):
     newuser = User(username=username, password=password, email=email, name=name, user_type=user_type)
-    if newuser:
-        db.session.add(newuser)
-        db.session.commit()
-        return newuser
-    
-    try:
-        if user_type == 'student':
-            user = Student(
-                username=username,
-                password=generate_password_hash(password),
-                email=email,
-                name=name,
-                student_id=kwargs.get('student_id'),
-                university=kwargs.get('university'),
-                major=kwargs.get('major'),
-                graduation_year=kwargs.get('graduation_year'),
-                gpa=kwargs.get('gpa'),
-                skills=kwargs.get('skills')
-            )
 
-        elif user_type == 'company':
-            user = Company(
-                username=username,
-                password=generate_password_hash(password),
-                email=email,
-                name=name,
-                company_id=kwargs.get('company_id'),
-                industry=kwargs.get('industry'),
-                website=kwargs.get('website'),
-                description=kwargs.get('description')
-            )
-
-        elif user_type == 'staff':
-            user = Staff(
-                username=username,
-                password=generate_password_hash(password),
-                email=email,
-                name=name,
-                staff_id=kwargs.get('staff_id'),
-                department=kwargs.get('department')
-            )
-        else:
-            return None
-        
-        db.session.add(user)
-        db.session.commit()
-        return user
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error creating user: {str(e)}")
-        return None
-
+    db.session.add(newuser)
+    db.session.commit()
+    return newuser
 
 
 def get_user_by_username(username):
@@ -85,9 +39,15 @@ def update_user(id, username):
 
 
 
-
-
 # Student Functions----------------------------Student Functions----------------------------Student Functions----------------------------Student Functions
+
+def get_student_by_id(student_id):
+    """Get student by ID"""
+    return Student.query.get(student_id)
+
+
+
+
 def apply_to_position(student_id, position_id, cover_letter=None):
     existing_application = Application.query.filter_by(
         student_id=student_id, 
@@ -137,6 +97,51 @@ def get_profile_completeness(student_id):
     
     completed = sum(1 for field in required_fields if field)
     return int((completed / len(required_fields)) * 100)
+
+
+
+def update_student_profile(student_id, **kwargs):
+    """Update student profile information"""
+    student = Student.query.get(student_id)
+    if not student:
+        return False
+    
+    for key, value in kwargs.items():
+        if hasattr(student, key) and value is not None:
+            setattr(student, key, value)
+    
+    db.session.commit()
+    return True
+
+
+def match_student_to_positions(student_id):
+    """Match student skills to available positions"""
+    student = Student.query.get(student_id)
+    if not student or not student.skills:
+        return []
+    
+    student_skills = set(skill.strip().lower() for skill in student.skills.split(','))
+    positions = InternshipPosition.query.filter_by(is_active=True).all()
+    
+    matches = []
+    for position in positions:
+        if not position.skills_required:
+            continue
+            
+        required_skills = set(skill.strip().lower() for skill in position.skills_required.split(','))
+        matched_skills = student_skills.intersection(required_skills)
+        match_percentage = len(matched_skills) / len(required_skills) * 100 if required_skills else 0
+        
+        if match_percentage >= 30:  # Only show positions with at least 30% match
+            matches.append({
+                'position': position,
+                'match_percentage': round(match_percentage),
+                'matched_skills': ', '.join(matched_skills)
+            })
+    
+    return sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:5]  # Return top 5 matches
+
+
 
 
 

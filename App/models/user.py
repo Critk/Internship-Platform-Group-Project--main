@@ -10,6 +10,8 @@ class User(db.Model):
     name = db.Column(db.String(120), nullable=False)
     user_type = db.Column(db.String(20), nullable=False)  # student, company, staff
 
+
+
     def __init__(self, username, password, email, name, user_type):
         self.username = username
         self.set_password(password)
@@ -34,6 +36,9 @@ class User(db.Model):
     def check_password(self, password):
         """Check hashed password."""
         return check_password_hash(self.password, password)
+
+
+
 
 
 class Student(User):
@@ -68,6 +73,10 @@ class Student(User):
     }
 
     
+
+
+
+
 class Company(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     company_id = db.Column(db.String(20), unique=True)
@@ -84,10 +93,15 @@ class Company(User):
             name=name,
             user_type='company'
         )
+
         self.company_id = company_id
         self.industry = industry
         self.website = website
         self.description = description
+
+
+
+
 
 class Staff(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
@@ -105,6 +119,10 @@ class Staff(User):
         self.staff_id = staff_id
         self.department = department
 
+
+
+
+
 class InternshipPosition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
@@ -120,6 +138,11 @@ class InternshipPosition(db.Model):
     applications = db.relationship('Application', backref='position', lazy=True)
     skills_required = db.Column(db.Text)  # Comma-separated skills
 
+
+
+
+
+
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
@@ -128,6 +151,11 @@ class Application(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, shortlisted, rejected, hired
     cover_letter = db.Column(db.Text)
     notes = db.Column(db.Text)  # Staff notes about the application
+
+
+
+
+
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)

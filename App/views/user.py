@@ -15,7 +15,8 @@ from App.controllers import (
     get_company_positions,
     create_internship_position,
     update_application_status,
-    get_all_applications
+    get_all_applications,
+    update_student_profile
 
 
 )
@@ -28,17 +29,59 @@ def get_user_page():
     users = get_all_users()
     return render_template('users.html', users=users)
 
+
+
 @user_views.route('/users', methods=['POST'])
 def create_user_action():
-    data = request.form
-    flash(f"User {data['username']} created!")
-    create_user(data['username'], data['password'])
+    try:
+        # Get all form data with proper defaults
+        data = {
+            'username': request.form.get('username'),
+            'password': request.form.get('password'),
+            'email': request.form.get('email'),
+            'name': request.form.get('name'),
+            'user_type': request.form.get('user_type', 'student')  # Default to student
+        }
+        
+        # Validate required fields
+        if not all(data.values()):  # Check if any field is empty
+            raise ValueError("All fields are required")
+            
+        # Create the user
+        user = create_user(
+            username=data['username'],
+            password=data['password'],
+            email=data['email'],
+            name=data['name'],
+            user_type=data['user_type']
+        )
+        
+        if not user:
+            flash('User creation failed', 'error')
+            return redirect(url_for('user_views.get_user_page'))
+        
+        # Success messages
+        if data['user_type'] == 'student':
+            flash(f"Student {data['username']} created!", 'success')
+        elif data['user_type'] == 'company':
+            flash(f"Company {data['username']} created!", 'success')
+        elif data['user_type'] == 'staff':
+            flash(f"Staff {data['username']} created!", 'success')
+        else:
+            flash(f"User {data['username']} created!", 'success')
+            
+    except Exception as e:
+        flash(f'Error creating user: {str(e)}', 'error')
+    
     return redirect(url_for('user_views.get_user_page'))
+
 
 @user_views.route('/api/users', methods=['GET'])
 def get_users_action():
     users = get_all_users_json()
     return jsonify(users)
+
+
 
 @user_views.route('/api/users', methods=['POST'])
 def create_user_endpoint():
@@ -46,9 +89,14 @@ def create_user_endpoint():
     user = create_user(data['username'], data['password'])
     return jsonify({'message': f"user {user.username} created with id {user.id}"})
 
+
+
+
 @user_views.route('/static/users', methods=['GET'])
 def static_user_page():
   return send_from_directory('static', 'static-user.html')
+
+
 
 
 
@@ -64,15 +112,16 @@ def dashboard():
     
     applications = get_student_applications(current_user.id)
     completeness = get_profile_completeness(current_user.id)
-    return render_template('student/dashboard.html', 
-                         applications=applications,
-                         completeness=completeness)
+    return render_template('student/dashboard.html', applications=applications, completeness=completeness)
+
 
 @student_views.route('/positions')
 @login_required
 def view_positions():
     positions = get_available_positions(current_user.id)
     return render_template('student/positions.html', positions=positions)
+
+
 
 @student_views.route('/apply/<int:position_id>', methods=['POST'])
 @login_required
@@ -83,6 +132,25 @@ def apply_position(position_id):
     else:
         flash('Application failed', 'error')
     return redirect(url_for('student_views.dashboard'))
+
+@student_views.route('/profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        if update_student_profile(
+            current_user.id,
+            university=request.form.get('university'),
+            major=request.form.get('major'),
+            graduation_year=request.form.get('graduation_year'),
+            skills=request.form.get('skills')
+        ):
+            flash('Profile updated!', 'success')
+        else:
+            flash('Update failed', 'error')
+        return redirect(url_for('student_views.dashboard'))
+    
+    return render_template('student/edit_profile.html')
+
 
 
 
@@ -153,3 +221,22 @@ def shortlist_app(application_id):
     else:
         flash('Operation failed', 'error')
     return redirect(url_for('staff_views.dashboard'))
+
+
+
+
+
+
+#notificationViews------------------------notificationViews-------------------------notificationViews--------------------------------------notificationViews
+
+
+
+
+
+
+
+
+
+
+
+#searchViews------------------------searchViews-------------------------searchViews--------------------------------------searchViews

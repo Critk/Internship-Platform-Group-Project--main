@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+{% block title %}Available Positions{% endblock %}
+{% block page %}Available Positions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col s12">
+        <div class="card">
+            <div class="card-content">
+                <div class="row">
+                    <div class="col s6">
+                        <span class="card-title">Internship Opportunities</span>
+                    </div>
+                    <div class="col s6 right-align">
+                        <a href="{{ url_for('student_views.dashboard') }}" class="btn purple waves-effect waves-light">
+                            <i class="material-icons left">arrow_back</i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                {% if positions %}
+                <table class="striped highlight responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Company</th>
+                            <th>Location</th>
+                            <th>Deadline</th>
+                            <th>Skills Required</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for position in positions %}
+                        <tr>
+                            <td>{{ position.title }}</td>
+                            <td>{{ position.company.name }}</td>
+                            <td>{{ position.location or 'Remote' }}</td>
+                            <td>{{ position.deadline.strftime('%Y-%m-%d') if position.deadline else 'Rolling' }}</td>
+                            <td>
+                                {% if position.skills_required %}
+                                <div class="chip-container">
+                                    {% for skill in position.skills_required.split(',') %}
+                                    <div class="chip">{{ skill.strip() }}</div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                Not specified
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn-floating purple view-details modal-trigger" 
+                                        data-target="positionModal{{ position.id }}">
+                                    <i class="material-icons">visibility</i>
+                                </button>
+                                <form action="{{ url_for('student_views.apply_position', position_id=position.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button class="btn-floating green" type="submit">
+                                        <i class="material-icons">send</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Position Details Modal -->
+                        <div id="positionModal{{ position.id }}" class="modal">
+                            <div class="modal-content">
+                                <h4>{{ position.title }}</h4>
+                                <h5>{{ position.company.name }}</h5>
+                                <div class="divider"></div>
+                                
+                                <div class="row">
+                                    <div class="col s6">
+                                        <p><strong>Location:</strong> {{ position.location or 'Remote' }}</p>
+                                        <p><strong>Deadline:</strong> {{ position.deadline.strftime('%Y-%m-%d') if position.deadline else 'Rolling' }}</p>
+                                    </div>
+                                    <div class="col s6">
+                                        <p><strong>Duration:</strong> {{ position.duration or 'Not specified' }}</p>
+                                        <p><strong>Salary:</strong> {{ position.salary or 'Not specified' }}</p>
+                                    </div>
+                                </div>
+                                
+                                <h5>Description</h5>
+                                <p>{{ position.description }}</p>
+                                
+                                <h5>Requirements</h5>
+                                <p>{{ position.requirements or 'Not specified' }}</p>
+                                
+                                <h5>Skills Required</h5>
+                                <div class="chip-container">
+                                    {% if position.skills_required %}
+                                        {% for skill in position.skills_required.split(',') %}
+                                        <div class="chip">{{ skill.strip() }}</div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p>Not specified</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <form action="{{ url_for('student_views.apply_position', position_id=position.id) }}" 
+                                      method="POST" style="display: inline;">
+                                    <button class="btn green waves-effect waves-light" type="submit">
+                                        Apply Now
+                                    </button>
+                                </form>
+                                <a href="#!" class="modal-close btn grey waves-effect waves-light">
+                                    Close
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="center" style="padding: 40px 0">
+                    <i class="large material-icons grey-text">work_off</i>
+                    <h5>No available positions found</h5>
+                    <p>Check back later or try expanding your search criteria</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Application Modal Structure -->
+<div id="applicationModal" class="modal">
+    <div class="modal-content">
+        <h4>Submit Application</h4>
+        <form id="applicationForm" method="POST">
+            <input type="hidden" name="position_id" id="modalPositionId">
+            <div class="input-field">
+                <textarea id="cover_letter" name="cover_letter" class="materialize-textarea"></textarea>
+                <label for="cover_letter">Cover Letter (Optional)</label>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" form="applicationForm" class="btn green waves-effect waves-light">
+            Submit Application
+        </button>
+        <a href="#!" class="modal-close btn grey waves-effect waves-light">
+            Cancel
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize modals
+        var modals = document.querySelectorAll('.modal');
+        M.Modal.init(modals);
+        
+        // Initialize tooltips
+        var tooltips = document.querySelectorAll('.tooltipped');
+        M.Tooltip.init(tooltips);
+        
+        // Set up application modal
+        document.querySelectorAll('.apply-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                var positionId = this.getAttribute('data-position-id');
+                document.getElementById('modalPositionId').value = positionId;
+            });
+        });
+    });
+</script>
+{% endblock %}
