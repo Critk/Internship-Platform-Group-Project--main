@@ -6,7 +6,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
 from flask_login import LoginManager
 from App.controllers import get_user
-
+from App.database import db
 
 from App.database import init_db
 from App.config import load_config
@@ -41,6 +41,8 @@ def create_app(overrides={}):
     configure_uploads(app, photos)
     add_views(app)
     init_db(app)
+    with app.app_context():
+        db.create_all()
     jwt = setup_jwt(app)
     setup_admin(app)
     login_manager.init_app(app)
