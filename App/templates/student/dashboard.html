@@ -2,90 +2,92 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="container">
     <!-- Profile Completeness -->
-    <div class="col s12 m4">
-        <div class="card">
-            <div class="card-content">
-                <span class="card-title">Your Profile</span>
-                <div class="progress">
-                    <div class="determinate" style="width: {{ completeness }}%"></div>
+    <div class="row">
+        <div class="col s12 m4">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title purple-text text-darken-2">Your Profile</span>
+                    <div class="progress">
+                        <div class="determinate" style="width: {{ completeness }}%"></div>
+                    </div>
+                    <p>{{ completeness }}% complete</p>
+                    <a href="{{ url_for('student_views.edit_profile') }}" class="btn purple waves-effect waves-light">
+                        Edit Profile
+                    </a>
                 </div>
-                <p>{{ completeness }}% complete</p>
-                <a href="{{ url_for('student_views.edit_profile') }}" class="btn purple waves-effect waves-light">
-                    Edit Profile
-                </a>
+            </div>
+        </div>
+
+        <!-- Applications -->
+        <div class="col s12 m8">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title purple-text text-darken-2">Your Applications</span>
+                    {% if applications %}
+                    <table class="striped responsive-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Company</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications %}
+                            <tr>
+                                <td>{{ app.position.title }}</td>
+                                <td>{{ app.position.company.name }}</td>
+                                <td>
+                                    <span class="new badge {{ 'blue' if app.status == 'pending' else 'green' if app.status == 'accepted' else 'red' }}" 
+                                          data-badge-caption="{{ app.status|title }}"></span>
+                                </td>
+                                <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>No applications yet. <a href="{{ url_for('student_views.view_positions') }}" class="purple-text">Browse positions</a></p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Applications -->
-    <div class="col s12 m8">
-        <div class="card">
-            <div class="card-content">
-                <span class="card-title">Your Applications</span>
-                {% if applications %}
-                <table class="striped">
-                    <thead>
-                        <tr>
-                            <th>Position</th>
-                            <th>Company</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for app in applications %}
-                        <tr>
-                            <td>{{ app.position.title }}</td>
-                            <td>{{ app.position.company.name }}</td>
-                            <td>
-                                <span class="new badge {{ 'blue' if app.status == 'pending' else 'green' if app.status == 'accepted' else 'red' }}" 
-                                      data-badge-caption="{{ app.status|title }}"></span>
-                            </td>
-                            <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No applications yet. <a href="{{ url_for('student_views.view_positions') }}">Browse positions</a></p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recommended Positions -->
-<div class="row">
-    <div class="col s12">
-        <div class="card">
-            <div class="card-content">
-                <span class="card-title">Recommended Positions</span>
-                <div class="row">
-                    {% for match in matched_positions %}
-                    <div class="col s12 m6 l4">
-                        <div class="card">
-                            <div class="card-content">
-                                <span class="card-title">{{ match.position.title }}</span>
-                                <p>{{ match.position.company.name }}</p>
-                                <div class="progress">
-                                    <div class="determinate" style="width: {{ match.match_percentage }}%"></div>
-                                </div>
-                                <p>Match: {{ match.match_percentage }}%</p>
-                                <p>Skills: {{ match.matched_skills }}</p>
-                                <div class="card-action">
-                                    <a href="{{ url_for('student_views.apply_position', position_id=match.position.id) }}" 
-                                       class="btn purple waves-effect waves-light">
-                                        Apply
-                                    </a>
+    <!-- Recommended Positions -->
+    <div class="row">
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title purple-text text-darken-2">Recommended Positions</span>
+                    <div class="row">
+                        {% for match in matched_positions %}
+                        <div class="col s12 m6 l4">
+                            <div class="card hoverable">
+                                <div class="card-content">
+                                    <span class="card-title">{{ match.position.title }}</span>
+                                    <p>{{ match.position.company.name }}</p>
+                                    <div class="progress">
+                                        <div class="determinate" style="width: {{ match.match_percentage }}%"></div>
+                                    </div>
+                                    <p><strong>Match:</strong> {{ match.match_percentage }}%</p>
+                                    <p><strong>Skills:</strong> {{ match.matched_skills }}</p>
+                                    <div class="card-action">
+                                        <a href="{{ url_for('student_views.apply_position', position_id=match.position.id) }}" 
+                                           class="btn purple waves-effect waves-light">
+                                            Apply
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        {% else %}
+                        <p>Complete your profile to get personalized recommendations</p>
+                        {% endfor %}
                     </div>
-                    {% else %}
-                    <p>Complete your profile to get personalized recommendations</p>
-                    {% endfor %}
                 </div>
             </div>
         </div>

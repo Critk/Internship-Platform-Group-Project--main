@@ -1,0 +1,58 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <h2>{{ position.title }}</h2>
+    <p><strong>Description:</strong> {{ position.description }}</p>
+    <p><strong>Requirements:</strong> {{ position.requirements }}</p>
+    <p><strong>Location:</strong> {{ position.location or "N/A" }}</p>
+    <p><strong>Salary:</strong> {{ position.salary or "N/A" }}</p>
+    <p><strong>Duration:</strong> {{ position.duration or "N/A" }}</p>
+    <p><strong>Deadline:</strong> {{ position.deadline.strftime('%Y-%m-%d') if position.deadline else 'N/A' }}</p>
+    <p><strong>Skills Required:</strong> {{ position.skills_required or "None listed" }}</p>
+
+    <hr>
+
+    <h3>Applications</h3>
+
+    {% if applications %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Applicant Name</th>
+                <th>Cover Letter</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.student.name }}</td>
+                <td>{{ app.cover_letter or "N/A" }}</td>
+                <td>
+                    {% if app.status == 'shortlisted' %}
+                        <span class="badge bg-info text-dark">Shortlisted</span>
+                    {% elif app.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% elif app.status == 'hired' %}
+                        <span class="badge bg-success">Hired</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    {% if app.status == 'pending' %}
+                    <a href="{{ url_for('company_views.shortlist_application', position_id=position.id, application_id=app.id) }}" class="btn btn-sm btn-outline-primary">Shortlist</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No applications received yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

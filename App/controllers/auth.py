@@ -5,7 +5,14 @@ from App.models import User
 def login(username, password):
   user = User.query.filter_by(username=username).first()
   if user and user.check_password(password):
-    return create_access_token(identity=username)
+        user_type = getattr(user, 'user_type', None)
+        claims = {}
+
+        if user_type:
+            claims['user_type'] = user_type
+
+        return create_access_token(identity=username, additional_claims=claims)
+
   return None
 
 

@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <h2>Staff Dashboard</h2>
+    <p class="text-muted">Review and manage all internship applications</p>
+
+    {% if applications %}
+    <table class="table table-hover mt-4">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Position</th>
+                <th>Company</th>
+                <th>Cover Letter</th>
+                <th>Status</th>
+                <th>Applied On</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.student.name }}</td>
+                <td>{{ app.position.title }}</td>
+                <td>{{ app.position.company.company_name }}</td>
+                <td>{{ app.cover_letter or "N/A" }}</td>
+                <td>
+                    {% if app.status == 'shortlisted' %}
+                        <span class="badge bg-info text-dark">Shortlisted</span>
+                    {% elif app.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% elif app.status == 'hired' %}
+                        <span class="badge bg-success">Hired</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    {% if app.status == 'pending' %}
+                    <a href="{{ url_for('staff_views.shortlist_app', application_id=app.id) }}" class="btn btn-sm btn-outline-primary">Shortlist</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="alert alert-info mt-4">No applications available.</div>
+    {% endif %}
+</div>
+{% endblock %}

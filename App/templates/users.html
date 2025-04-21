@@ -1,93 +1,62 @@
-{% extends "layout.html" %}
-{% block title %}App Users{% endblock %}
-{% block page %}App Users{% endblock %}
-
+{% extends 'layout.html' %}
 {% block content %}
-    <div class="row">
-        <p>
-            This table is rendered on the Server. Flask gets the data from the database and uses jinja templates to dynamically render this page when a request is sent to <a href="/users">/users</a>.
-        </p>
-    </div>
-
-    <div class="row">
-      <form class="col s12" method="POST" action="/users">
-        <div class="row">
-          <div class="input-field col s6">
-            <input placeholder="Username" name="username" type="text" class="validate" required>
-            <label for="username">Username</label>
-          </div>
-          <div class="input-field col s6">
-            <input placeholder="Password" name="password" type="password" class="validate" required>
-            <label for="password">Password</label>
-          </div>
+<div class="container">
+  <div class="card z-depth-3" style="margin-top: 40px; border-radius: 12px;">
+    <div class="card-content">
+      <span class="card-title center-align purple-text text-darken-2" style="font-weight: bold;">
+        <i class="material-icons left">person_add</i>
+        Create a New User Account
+      </span>
+      <form method="POST">
+        <div class="input-field">
+          <i class="material-icons prefix">account_circle</i>
+          <input name="username" id="username" type="text" required>
+          <label for="username">Username</label>
         </div>
 
-        <div class="row">
-          <div class="input-field col s6">
-            <input placeholder="Full Name" name="name" type="text" class="validate" required>
-            <label for="name">Full Name</label>
-          </div>
-          <div class="input-field col s6">
-            <input placeholder="Email" name="email" type="email" class="validate" required>
-            <label for="email">Email</label>
-          </div>
+        <div class="input-field">
+          <i class="material-icons prefix">email</i>
+          <input name="email" id="email" type="email" required>
+          <label for="email">Email</label>
         </div>
 
-        <div class="row">
-          <div class="input-field col s12">
-            <select name="user_type" required>
-              <option value="" disabled selected>Choose user type</option>
-              <option value="student">Student</option>
-              <option value="company">Company</option>
-              <option value="staff">Staff</option>
-            </select>
-            <label>User Type</label>
-          </div>
+        <div class="input-field">
+          <i class="material-icons prefix">lock</i>
+          <input name="password" id="password" type="password" required>
+          <label for="password">Password</label>
         </div>
 
-        <div class="row">
-          <div class="input-field col s12">
-            <button class="btn waves-effect waves-light right purple" type="submit" name="action">Create User</button>
-          </div>
+        <div class="input-field">
+          <i class="material-icons prefix">person</i>
+          <input name="name" id="name" type="text" required>
+          <label for="name">Full Name</label>
+        </div>
+
+        <div class="input-field">
+          <i class="material-icons prefix">work</i>
+          <select name="user_type" id="user_type" required>
+            <option value="" disabled selected>Choose Account Type</option>
+            <option value="student">Student</option>
+            <option value="company">Company</option>
+            <option value="staff">Staff</option>
+          </select>
+          <label for="user_type">Account Type</label>
+        </div>
+
+        <div class="center-align" style="margin-top: 30px;">
+          <button type="submit" class="btn-large purple waves-effect waves-light">
+            <i class="material-icons left">person_add</i>Create Account
+          </button>
         </div>
       </form>
     </div>
+  </div>
+</div>
 
-    <div class="row">
-      <table class="striped highlight">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in users %}
-            <tr>
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span class="new badge {{ 'blue' if user.user_type == 'student' else 'green' if user.user_type == 'company' else 'purple' }}" 
-                      data-badge-caption="{{ user.user_type|title }}"></span>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-{% endblock %}
-
-{% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Materialize select dropdown
-    M.FormSelect.init(document.querySelectorAll('select'));
+  document.addEventListener('DOMContentLoaded', function () {
+    const elems = document.querySelectorAll('select');
+    M.FormSelect.init(elems);
   });
 </script>
 {% endblock %}

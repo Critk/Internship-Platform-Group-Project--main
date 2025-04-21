@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="container">
+    <h2>Welcome, {{ current_user.name }}</h2>
+    
+    <!-- Show "Create New Internship Position" button only for companies -->
+    {% if current_user.user_type == 'company' %}
+        <a href="{{ url_for('company_views.new_position') }}" class="btn purple waves-effect waves-light my-3">
+            Create New Internship Position
+        </a>
+    {% endif %}
+
+    {% if positions %}
+    <h5>Your Internship Positions</h5>
+    <div class="list-group">
+        {% for position in positions %}
+        <div class="list-group-item">
+            <h6>{{ position.title }}</h6>
+            <p>{{ position.description[:100] }}...</p>
+            <p><strong>Location:</strong> {{ position.location }}</p><br>
+            <p><strong>Deadline:</strong> {{ position.deadline.strftime('%Y-%m-%d') if position.deadline else 'N/A' }}</p><br>
+            <a href="{{ url_for('company_views.view_position', position_id=position.id) }}" class="btn btn-sm btn-secondary mt-2">View Applications</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No internship positions posted yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

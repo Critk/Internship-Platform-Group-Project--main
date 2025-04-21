@@ -1,7 +1,7 @@
 from App.models import User, Student, Company, Staff, InternshipPosition, Application, Notification
 from App.database import db
 from werkzeug.security import generate_password_hash
-
+from datetime import datetime
 
 # User Functions---------------------User Functions------------------User Functions------------------User Functions
 def create_user(username, password, email, name, user_type, **kwargs):
@@ -147,6 +147,11 @@ def match_student_to_positions(student_id):
 
 # Company Functions-----------------------------Company Functions----------------------------Company Functions----------------------------Company Functions
 def create_internship_position(company_id, title, description, requirements, **kwargs):
+    deadline_str = kwargs.pop('deadline', None)
+    if deadline_str:
+        kwargs['deadline'] = datetime.strptime(deadline_str, '%Y-%m-%d')
+
+    
     position = InternshipPosition(
         company_id=company_id,
         title=title,
@@ -162,6 +167,9 @@ def create_internship_position(company_id, title, description, requirements, **k
     db.session.add(position)
     db.session.commit()
     return position
+
+def get_all_companies():
+    return Company.query.all()
 
 def get_company_positions(company_id):
     return InternshipPosition.query.filter_by(company_id=company_id).order_by(InternshipPosition.created_at.desc()).all()

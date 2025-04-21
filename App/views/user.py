@@ -1,8 +1,13 @@
 from flask import Blueprint, render_template, jsonify, request, send_from_directory, flash, redirect, url_for
 from flask_jwt_extended import jwt_required, current_user as jwt_current_user
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_manager
+
+
 
 from.index import index_views
+from flask import current_app
+
+
 
 from App.controllers import (
     create_user,
@@ -16,13 +21,15 @@ from App.controllers import (
     create_internship_position,
     update_application_status,
     get_all_applications,
-    update_student_profile
-
-
+    update_student_profile,
+    get_position_applications,
+    get_all_companies
 )
+from App.models import Company  # Import the Company model
 
 #userViews------------------------userViews-------------------------userViews--------------------------------------userViews
 user_views = Blueprint('user_views', __name__, template_folder='../templates')
+
 
 @user_views.route('/users', methods=['GET'])
 def get_user_page():
@@ -91,19 +98,23 @@ def create_user_endpoint():
 
 
 
-
 @user_views.route('/static/users', methods=['GET'])
 def static_user_page():
   return send_from_directory('static', 'static-user.html')
 
-
+@user_views.route('/companies', methods=['GET'])
+def list_companies():
+    companies = get_all_companies()
+    return render_template('companies.html', companies=companies)
 
 
 
 #studentViews------------------------studentViews-------------------------studentViews--------------------------------------studentViews
 student_views = Blueprint('student_views', __name__, template_folder='../templates')
 
-@student_views.route('/dashboard')
+
+
+@student_views.route('/student-dashboard', methods=['GET'])
 @login_required
 def dashboard():
     if current_user.user_type != 'student':
@@ -116,7 +127,6 @@ def dashboard():
 
 
 @student_views.route('/positions')
-@login_required
 def view_positions():
     positions = get_available_positions(current_user.id)
     return render_template('student/positions.html', positions=positions)
@@ -157,7 +167,7 @@ def edit_profile():
 #companyViews------------------------companyViews-------------------------companyViews--------------------------------------companyViews
 company_views = Blueprint('company_views', __name__, template_folder='../templates')
 
-@company_views.route('/dashboard')
+@company_views.route('/company-dashboard')
 @login_required
 def dashboard():
     if current_user.user_type != 'company':
@@ -195,7 +205,20 @@ def shortlist_application(position_id, application_id):
         flash('Application shortlisted', 'success')
     else:
         flash('Operation failed', 'error')
-    return redirect(url_for('company_views.view_position', position_id=position_id))
+    return redirect('company/view_position.html')
+
+
+@company_views.route('/position/<int:position_id>')
+@login_required
+def view_position(position_id):
+    if current_user.user_type != 'company':
+        flash('Access denied', 'error')
+        return redirect(url_for('auth_views.login_page'))
+
+    position = get_company_positions(position_id)
+    applications = get_position_applications(position_id)
+
+    return render_template('company/view_position.html', position=position, applications=applications)
 
 
 
@@ -203,7 +226,7 @@ def shortlist_application(position_id, application_id):
 #staffViews------------------------staffViews-------------------------staffViews--------------------------------------staffViews
 staff_views = Blueprint('staff_views', __name__, template_folder='../templates')
 
-@staff_views.route('/dashboard')
+@staff_views.route('/staff-dashboard')
 @login_required
 def dashboard():
     if current_user.user_type != 'staff':
